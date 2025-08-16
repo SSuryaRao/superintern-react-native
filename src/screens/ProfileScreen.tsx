@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, StatusBar } from 'react-native';
+import {
+    SafeAreaView,
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    StyleSheet,
+    ScrollView,
+    Alert,
+    StatusBar,
+    TextInputProps // Import TextInputProps
+} from 'react-native';
 import auth from '@react-native-firebase/auth';
 import { SvgXml } from 'react-native-svg';
 
@@ -14,89 +25,95 @@ const calendarIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height=
 const skillsIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
 
 
-// A reusable input component with an icon
-const IconTextInput = ({ icon, ...props }) => (
+// --- Define Props for IconTextInput ---
+type IconTextInputProps = TextInputProps & {
+    icon: string;
+};
+
+// --- A reusable input component with an icon ---
+const IconTextInput = ({ icon, ...props }: IconTextInputProps) => (
     <View style={styles.inputContainer}>
         <SvgXml xml={icon} />
-        <TextInput style={styles.input} {...props} />
+        <TextInput style={styles.input} placeholderTextColor="#9CA3AF" {...props} />
     </View>
 );
 
+// --- Define Props for ProfileScreen ---
 type ProfileScreenProps = {
-  navigation: any; 
+    navigation: any;
 };
 
 const ProfileScreen = ({ navigation }: ProfileScreenProps) => {
-  const user = auth().currentUser;
-  
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [github, setGithub] = useState('');
-  const [university, setUniversity] = useState('');
-  const [location, setLocation] = useState('');
-  const [major, setMajor] = useState('');
-  const [gradYear, setGradYear] = useState('');
-  const [skills, setSkills] = useState('');
-  const [aboutMe, setAboutMe] = useState('');
+    const user = auth().currentUser;
 
-  const handleSaveChanges = () => {
-    Alert.alert("Profile Saved", "Your information has been updated!");
-    navigation.goBack();
-  };
-  
-  const getInitials = () => {
-    if (user && user.email) {
-      return user.email.substring(0, 2).toUpperCase();
-    }
-    return '??';
-  };
+    const [fullName, setFullName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [github, setGithub] = useState('');
+    const [university, setUniversity] = useState('');
+    const [location, setLocation] = useState('');
+    const [major, setMajor] = useState('');
+    const [gradYear, setGradYear] = useState('');
+    const [skills, setSkills] = useState('');
+    const [aboutMe, setAboutMe] = useState('');
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-            <Text style={styles.title}>My Profile</Text>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-                <Text style={styles.doneText}>Done</Text>
-            </TouchableOpacity>
-        </View>
+    const handleSaveChanges = () => {
+        Alert.alert("Profile Saved", "Your information has been updated!");
+        navigation.goBack();
+    };
 
-        <View style={styles.profileHeader}>
-            <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{getInitials()}</Text>
-            </View>
-            <Text style={styles.profileName}>{fullName || 'Alex Johnson'}</Text>
-            <Text style={styles.profileEmail}>{user?.email}</Text>
-        </View>
+    const getInitials = () => {
+        if (user && user.email) {
+            return user.email.substring(0, 2).toUpperCase();
+        }
+        return '??';
+    };
 
-        <View style={styles.card}>
-            <Text style={styles.cardTitle}>Personal Information</Text>
-            <IconTextInput icon={userIcon} value={fullName} onChangeText={setFullName} placeholder="Full Name" />
-            <IconTextInput icon={phoneIcon} value={phone} onChangeText={setPhone} placeholder="Phone Number" keyboardType="phone-pad" />
-            <IconTextInput icon={locationIcon} value={location} onChangeText={setLocation} placeholder="Location (e.g., Palo Alto, CA)" />
-        </View>
-        
-        <View style={styles.card}>
-            <Text style={styles.cardTitle}>Academic & Professional</Text>
-            <IconTextInput icon={universityIcon} value={university} onChangeText={setUniversity} placeholder="University" />
-            <IconTextInput icon={majorIcon} value={major} onChangeText={setMajor} placeholder="Major / Field of Study" />
-            <IconTextInput icon={calendarIcon} value={gradYear} onChangeText={setGradYear} placeholder="Graduation Year" keyboardType="numeric" />
-            <IconTextInput icon={githubIcon} value={github} onChangeText={setGithub} placeholder="GitHub Profile URL" autoCapitalize="none" />
-            <IconTextInput icon={skillsIcon} value={skills} onChangeText={setSkills} placeholder="Skills (comma-separated)" />
-        </View>
+    return (
+        <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="dark-content" />
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <View style={styles.header}>
+                    <Text style={styles.title}>My Profile</Text>
+                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                        <Text style={styles.doneText}>Done</Text>
+                    </TouchableOpacity>
+                </View>
 
-        <View style={styles.card}>
-             <Text style={styles.cardTitle}>About Me</Text>
-            <TextInput style={[styles.input, styles.textArea]} value={aboutMe} onChangeText={setAboutMe} placeholder="Tell us about yourself, your interests, and career goals..." multiline />
-        </View>
+                <View style={styles.profileHeader}>
+                    <View style={styles.avatar}>
+                        <Text style={styles.avatarText}>{getInitials()}</Text>
+                    </View>
+                    <Text style={styles.profileName}>{fullName || 'Alex Johnson'}</Text>
+                    <Text style={styles.profileEmail}>{user?.email}</Text>
+                </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
-          <Text style={styles.buttonText}>Save Changes</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
-  );
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>Personal Information</Text>
+                    <IconTextInput icon={userIcon} value={fullName} onChangeText={setFullName} placeholder="Full Name" />
+                    <IconTextInput icon={phoneIcon} value={phone} onChangeText={setPhone} placeholder="Phone Number" keyboardType="phone-pad" />
+                    <IconTextInput icon={locationIcon} value={location} onChangeText={setLocation} placeholder="Location (e.g., Palo Alto, CA)" />
+                </View>
+
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>Academic & Professional</Text>
+                    <IconTextInput icon={universityIcon} value={university} onChangeText={setUniversity} placeholder="University" />
+                    <IconTextInput icon={majorIcon} value={major} onChangeText={setMajor} placeholder="Major / Field of Study" />
+                    <IconTextInput icon={calendarIcon} value={gradYear} onChangeText={setGradYear} placeholder="Graduation Year" keyboardType="numeric" />
+                    <IconTextInput icon={githubIcon} value={github} onChangeText={setGithub} placeholder="GitHub Profile URL" autoCapitalize="none" />
+                    <IconTextInput icon={skillsIcon} value={skills} onChangeText={setSkills} placeholder="Skills (comma-separated)" />
+                </View>
+
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>About Me</Text>
+                    <TextInput style={[styles.input, styles.textArea]} value={aboutMe} onChangeText={setAboutMe} placeholder="Tell us about yourself, your interests, and career goals..." multiline placeholderTextColor="#9CA3AF" />
+                </View>
+
+                <TouchableOpacity style={styles.button} onPress={handleSaveChanges}>
+                    <Text style={styles.buttonText}>Save Changes</Text>
+                </TouchableOpacity>
+            </ScrollView>
+        </SafeAreaView>
+    );
 };
 
 const styles = StyleSheet.create({
@@ -166,9 +183,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         marginBottom: 16,
     },
-    input: { 
+    input: {
         flex: 1,
-        paddingVertical: 12, 
+        paddingVertical: 12,
         paddingHorizontal: 8,
         fontSize: 16,
         color: '#111827',
@@ -182,10 +199,10 @@ const styles = StyleSheet.create({
         borderColor: '#E5E7EB',
         padding: 12,
     },
-    button: { 
-        backgroundColor: '#6366F1', 
-        paddingVertical: 16, 
-        borderRadius: 12, 
+    button: {
+        backgroundColor: '#6366F1',
+        paddingVertical: 16,
+        borderRadius: 12,
         alignItems: 'center',
         shadowColor: "#4F46E5",
         shadowOffset: { width: 0, height: 4 },

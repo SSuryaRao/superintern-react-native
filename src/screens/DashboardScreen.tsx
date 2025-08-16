@@ -1,107 +1,213 @@
-import React from 'react';
-import { SafeAreaView, Text, View, StyleSheet, ScrollView, StatusBar } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { SafeAreaView, Text, View, StyleSheet, ScrollView, StatusBar, Animated, TouchableOpacity } from 'react-native';
 import { SvgXml } from 'react-native-svg';
-import AppHeader from '../components/AppHeader'; // Import the new header
+import AppHeader from '../components/AppHeader';
+import auth from '@react-native-firebase/auth';
 
-// Icons... (keep the existing icon code)
-const starIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
-const trophyIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 15h1.5a2.5 2.5 0 0 1 0 5H4"></path><path d="M19.5 15H18a2.5 2.5 0 0 0 0 5h1.5"></path><path d="M12 6V3"></path><path d="M12 21v-3"></path><path d="M9 12H3"></path><path d="M21 12h-6"></path><circle cx="12" cy="12" r="4"></circle></svg>`;
-const sendIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
-const checkIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-const taskIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg>`;
+// --- Icons ---
+const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
+const starIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+const trophyIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 15h1.5a2.5 2.5 0 0 1 0 5H4"></path><path d="M19.5 15H18a2.5 2.5 0 0 0 0 5h1.5"></path><path d="M12 6V3"></path><path d="M12 21v-3"></path><path d="M9 12H3"></path><path d="M21 12h-6"></path><circle cx="12" cy="12" r="4"></circle></svg>`;
+const sendIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
 
+const DashboardScreen = () => {
+    const user = auth().currentUser;
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(30)).current;
+    const progressAnim = useRef(new Animated.Value(0)).current;
+    const progress = 75; // Example progress percentage
 
-const DashboardScreen = () => (
-  <SafeAreaView style={styles.container}>
-    <StatusBar barStyle="dark-content" />
-    <AppHeader />
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Welcome back!</Text>
-        <Text style={styles.headerSubtitle}>Keep up the great work on your internship journey</Text>
-      </View>
-      {/* Rest of the screen content... */}
-      <View style={styles.statsGrid}>
-        <View style={[styles.statCard, {backgroundColor: '#FFFBEB'}]}>
-          <SvgXml xml={starIcon} width={24} height={24} stroke="#F59E0B" />
-          <Text style={styles.statValue}>1250</Text>
-          <Text style={styles.statLabel}>Total Points</Text>
-        </View>
-        <View style={[styles.statCard, {backgroundColor: '#EFF6FF'}]}>
-           <SvgXml xml={trophyIcon} width={24} height={24} stroke="#3B82F6" />
-          <Text style={styles.statValue}>#3</Text>
-          <Text style={styles.statLabel}>Leaderboard Rank</Text>
-        </View>
-        <View style={[styles.statCard, {backgroundColor: '#F0FDF4'}]}>
-           <SvgXml xml={sendIcon} width={24} height={24} stroke="#22C55E" />
-          <Text style={styles.statValue}>5</Text>
-          <Text style={styles.statLabel}>Applications</Text>
-        </View>
-        <View style={[styles.statCard, {backgroundColor: '#FAF5FF'}]}>
-           <SvgXml xml={checkIcon} width={24} height={24} stroke="#8B5CF6" />
-          <Text style={styles.statValue}>3</Text>
-          <Text style={styles.statLabel}>Approved</Text>
-        </View>
-      </View>
-      <View style={styles.progressCard}>
-        <View style={styles.progressHeader}>
-          <SvgXml xml={taskIcon} width={20} height={20} stroke="#6B7280" />
-          <Text style={styles.progressTitle}>Task Progress</Text>
-          <Text style={styles.progressTag}>Advanced Intern</Text>
-        </View>
-        <Text style={styles.progressInfo}>15 of 20 tasks completed</Text>
-        <View style={styles.progressBarBackground}>
-          <View style={styles.progressBarFill} />
-        </View>
-        <Text style={styles.progressPercent}>75%</Text>
-      </View>
-      <View style={styles.tasksSection}>
-        <Text style={styles.sectionTitle}>Available Tasks</Text>
-        <View style={styles.taskCard}>
-          <Text style={styles.taskTitle}>API Documentation</Text>
-          <Text style={styles.taskDescription}>Write comprehensive documentation for the REST API endpoints</Text>
-          <View style={styles.taskFooter}>
-            <Text style={styles.taskPoints}>⭐ 40 pts</Text>
-            <Text style={styles.taskDueDate}>Due 8/20/2025</Text>
-            <View style={styles.applyButton}>
-              <SvgXml xml={sendIcon} width={16} height={16} stroke="#FFFFFF" />
-              <Text style={styles.applyButtonText}>Apply</Text>
-            </View>
-          </View>
-        </View>
-      </View>
-    </ScrollView>
-  </SafeAreaView>
-);
+    useEffect(() => {
+        // Animate progress bar
+        Animated.timing(progressAnim, {
+            toValue: progress,
+            duration: 1000,
+            useNativeDriver: false, // width animation not supported by native driver
+        }).start();
+
+        // Staggered fade-in and slide-up animation for the whole screen
+        Animated.stagger(150, [
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 600,
+                useNativeDriver: true,
+            }),
+            Animated.spring(slideAnim, {
+                toValue: 0,
+                friction: 7,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, []);
+
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Good Morning";
+        if (hour < 18) return "Good Afternoon";
+        return "Good Evening";
+    };
+
+    const progressWidth = progressAnim.interpolate({
+        inputRange: [0, 100],
+        outputRange: ['0%', '100%'],
+    });
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="dark-content" />
+            <AppHeader />
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+                    <View style={styles.greetingCard}>
+                        <View>
+                            <Text style={styles.greetingTitle}>{getGreeting()}!</Text>
+                            <Text style={styles.greetingName}>{user?.displayName || user?.email?.split('@')[0]}</Text>
+                        </View>
+                        <SvgXml xml={sunIcon} width={40} height={40} />
+                    </View>
+                </Animated.View>
+
+                <Animated.View style={[styles.card, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+                    <Text style={styles.cardTitle}>Your Progress</Text>
+                    <View style={styles.statsRow}>
+                        <View style={styles.statItem}>
+                            <SvgXml xml={starIcon} width={28} height={28} />
+                            <Text style={styles.statValue}>1250</Text>
+                            <Text style={styles.statLabel}>Points</Text>
+                        </View>
+                        <View style={styles.statItem}>
+                            <SvgXml xml={trophyIcon} width={28} height={28} />
+                            <Text style={styles.statValue}>#3</Text>
+                            <Text style={styles.statLabel}>Rank</Text>
+                        </View>
+                    </View>
+                    <View style={styles.progressWrapper}>
+                        <Text style={styles.progressLabel}>Task Completion</Text>
+                        <View style={styles.progressBarBackground}>
+                            <Animated.View style={[styles.progressBarFill, { width: progressWidth }]} />
+                        </View>
+                        <Text style={styles.progressPercent}>{progress}%</Text>
+                    </View>
+                </Animated.View>
+
+                <Animated.View style={[styles.card, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+                    <Text style={styles.cardTitle}>Available Tasks</Text>
+                    <View style={styles.taskItem}>
+                        <View>
+                            <Text style={styles.taskTitle}>API Documentation</Text>
+                            <Text style={styles.taskPoints}>⭐ 40 pts</Text>
+                        </View>
+                        <TouchableOpacity style={styles.applyButton}>
+                            <SvgXml xml={sendIcon} width={16} height={16} />
+                        </TouchableOpacity>
+                    </View>
+                </Animated.View>
+            </ScrollView>
+        </SafeAreaView>
+    );
+};
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 20 },
-  header: { marginBottom: 24 },
-  headerTitle: { fontSize: 28, fontWeight: 'bold', color: '#111827' },
-  headerSubtitle: { fontSize: 16, color: '#6B7280', marginTop: 4 },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  statCard: { width: '48%', borderRadius: 16, padding: 16, marginBottom: 16, alignItems: 'flex-start' },
-  statValue: { fontSize: 24, fontWeight: 'bold', marginTop: 8, color: '#111827' },
-  statLabel: { fontSize: 14, color: '#4B5563', marginTop: 2 },
-  progressCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 20, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 3 },
-  progressHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  progressTitle: { fontSize: 16, fontWeight: '600', color: '#374151', marginLeft: 8 },
-  progressTag: { backgroundColor: '#E0E7FF', color: '#4338CA', fontSize: 12, fontWeight: '500', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, marginLeft: 'auto' },
-  progressInfo: { fontSize: 14, color: '#6B7280', marginBottom: 12 },
-  progressBarBackground: { height: 8, backgroundColor: '#E5E7EB', borderRadius: 4, overflow: 'hidden' },
-  progressBarFill: { width: '75%', height: '100%', backgroundColor: '#8B5CF6', borderRadius: 4 },
-  progressPercent: { alignSelf: 'flex-end', marginTop: 4, fontSize: 12, color: '#6B7280', fontWeight: '500' },
-  tasksSection: { marginBottom: 20 },
-  sectionTitle: { fontSize: 20, fontWeight: 'bold', color: '#111827', marginBottom: 16 },
-  taskCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 3 },
-  taskTitle: { fontSize: 18, fontWeight: '600', color: '#1F2937' },
-  taskDescription: { fontSize: 14, color: '#6B7280', marginTop: 4, marginBottom: 16 },
-  taskFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  taskPoints: { fontSize: 14, fontWeight: '500', color: '#4B5563' },
-  taskDueDate: { fontSize: 14, color: '#6B7280' },
-  applyButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#6366F1', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12 },
-  applyButtonText: { color: '#FFFFFF', fontWeight: '600', marginLeft: 6 },
+    container: { flex: 1, backgroundColor: '#F0F5FF' },
+    scrollContent: { paddingHorizontal: 20, paddingBottom: 20 },
+    greetingCard: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#FFFBEB',
+        borderRadius: 20,
+        padding: 24,
+        marginBottom: 24,
+    },
+    greetingTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#92400E',
+    },
+    greetingName: {
+        fontSize: 16,
+        color: '#B45309',
+    },
+    card: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        padding: 24,
+        marginBottom: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        elevation: 5,
+    },
+    cardTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#1F2937',
+        marginBottom: 20,
+    },
+    statsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginBottom: 24,
+    },
+    statItem: {
+        alignItems: 'center',
+    },
+    statValue: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#111827',
+        marginTop: 8,
+    },
+    statLabel: {
+        fontSize: 14,
+        color: '#6B7280',
+        marginTop: 2,
+    },
+    progressWrapper: {},
+    progressLabel: {
+        fontSize: 14,
+        color: '#4B5563',
+        marginBottom: 8,
+    },
+    progressBarBackground: {
+        height: 12,
+        backgroundColor: '#E5E7EB',
+        borderRadius: 6,
+        overflow: 'hidden',
+    },
+    progressBarFill: {
+        height: '100%',
+        backgroundColor: '#8B5CF6',
+        borderRadius: 6,
+    },
+    progressPercent: {
+        alignSelf: 'flex-end',
+        marginTop: 4,
+        fontSize: 12,
+        color: '#6B7280',
+        fontWeight: '500',
+    },
+    taskItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    taskTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#374151',
+    },
+    taskPoints: {
+        fontSize: 14,
+        color: '#6B7280',
+        marginTop: 4,
+    },
+    applyButton: {
+        backgroundColor: '#6366F1',
+        padding: 12,
+        borderRadius: 25, // Makes it a circle
+    },
 });
 
 export default DashboardScreen;
