@@ -117,3 +117,6 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+// ADD THIS LINE FOR FIREBASE
+apply plugin: 'com.google.gms.google-services'

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "713974959722",
+    "project_id": "superinternapp",
+    "storage_bucket": "superinternapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:713974959722:android:d748692bbe918c5dedc413",
+        "android_client_info": {
+          "package_name": "com.yourawesomeapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUge5rBaQ3zuiDCJx5RWQ7wqVH8_tbeSo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
