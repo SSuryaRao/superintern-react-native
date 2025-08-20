@@ -1,28 +1,39 @@
-// FILE: src/navigation/AppNavigator.tsx
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { SvgXml } from 'react-native-svg';
 
+// Import all your screens
 import DashboardScreen from '../screens/DashboardScreen';
 import LeaderboardScreen from '../screens/LeaderboardScreen';
 import JobsScreen from '../screens/JobsScreen';
 import HireScreen from '../screens/HireScreen';
+import LoginScreen from '../screens/LoginScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 
+// --- Icon definitions ---
 const homeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`;
 const leaderboardIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 15h1.5a2.5 2.5 0 0 1 0 5H4"></path><path d="M19.5 15H18a2.5 2.5 0 0 0 0 5h1.5"></path><path d="M12 6V3"></path><path d="M12 21v-3"></path><path d="M9 12H3"></path><path d="M21 12h-6"></path><circle cx="12" cy="12" r="4"></circle></svg>`;
 const jobsIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h8"></path><path d="M8 10h8"></path><path d="M8 14h4"></path></svg>`;
 const hireIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>`;
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
-const AppNavigator = () => {
+/**
+ * This is the Bottom Tab Navigator that contains the main screens of the app.
+ * It is only shown AFTER the user has successfully logged in.
+ */
+const MainTabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ size, focused }) => {
-          let iconXml;
+          let iconXml: string | null = null; // FIX: Initialize with null
           const iconColor = focused ? '#6366F1' : '#6B7280';
           if (route.name === 'Dashboard') iconXml = homeIcon;
           else if (route.name === 'Leaderboard') iconXml = leaderboardIcon;
@@ -41,6 +52,64 @@ const AppNavigator = () => {
       <Tab.Screen name="Jobs" component={JobsScreen} />
       <Tab.Screen name="Hire" component={HireScreen} />
     </Tab.Navigator>
+  );
+};
+
+/**
+ * This Stack Navigator contains the main app (the tabs) and the Profile screen.
+ * This allows navigating from the AppHeader (inside the tabs) to the Profile screen,
+ * which will cover the entire screen.
+ */
+const AppStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+    </Stack.Navigator>
+  );
+};
+
+/**
+ * This is the ROOT navigator for the entire application.
+ * It uses the Firebase auth state to decide whether to show the
+ * Login screen or the main application stack.
+ */
+const AppNavigator = () => {
+  const [initializing, setInitializing] = useState(true);
+  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
+
+  // This listener checks for login/logout events and updates the user state.
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(userState => {
+      setUser(userState);
+      if (initializing) {
+        setInitializing(false);
+      }
+    });
+    return subscriber; // Unsubscribe on unmount
+  }, [initializing]);
+
+  // Show a loading screen while Firebase checks for a logged-in user.
+  if (initializing) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#6366F1" />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {user ? (
+          // If a user is logged in, show the main app.
+          <Stack.Screen name="App" component={AppStack} />
+        ) : (
+          // If no user is logged in, show the login screen.
+          <Stack.Screen name="Login" component={LoginScreen} />
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 };
 
